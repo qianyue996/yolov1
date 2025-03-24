@@ -6,7 +6,7 @@ from torchvision.transforms import ToTensor
 class YoloVOCDataset(Dataset):
     def __init__(self, IMG_SIZE, S, C, image_set='train'):
         super().__init__()
-        self.voc_ds=VOCDetection(root='./data',year='2012',image_set=image_set,download=False)
+        self.voc_ds=VOCDetection(root='./data',year='2012',image_set=image_set,download=True)
         
         classdict=set()
         for _,label in self.voc_ds:
