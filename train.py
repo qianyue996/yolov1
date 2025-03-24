@@ -13,7 +13,8 @@ from loss import *
 def main():
     # 定义使用设备是gpu or cpu
     device='cuda' if torch.cuda.is_available() else 'cpu'
-    print('\n','='*20)
+    print('\n')
+    print('='*20)
     print(f'当前训练选择的是：{device}')
     print('='*20,'\n')
 
