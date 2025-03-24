@@ -4,6 +4,7 @@ import torch
 import time
 from torch.utils.tensorboard import SummaryWriter
 import os
+from tqdm import tqdm
 
 from datasets import YoloVOCDataset
 from model import Yolov1
@@ -12,6 +13,9 @@ from loss import *
 def main():
     # 定义使用设备是gpu or cpu
     device='cuda' if torch.cuda.is_available() else 'cpu'
+    print('\n','='*20)
+    print(f'当前训练选择的是：{device}')
+    print('='*20,'\n')
 
     # 输入图像大小
     IMG_SIZE=448  # resnet backbone决定的
@@ -39,7 +43,7 @@ def main():
         optimizer.load_state_dict(checkpoint['optimizer'])
     # 加载数据集
     ds=YoloVOCDataset(IMG_SIZE, S, C)
-    dataloader=DataLoader(ds,batch_size=4,shuffle=True)
+    dataloader=DataLoader(ds,batch_size=1,shuffle=True)
 
     # tensorboard
     writer=SummaryWriter(f'runs/{time.strftime("%Y-%m-%d-%H-%M-%S",time.localtime())}')
@@ -48,7 +52,7 @@ def main():
     losses=[]
     for epoch in range(500):
         batch_avg_loss=0
-        for batch_x,batch_y in dataloader:
+        for batch_x,batch_y in tqdm(dataloader):
             batch_x,batch_y=batch_x.to(device),batch_y.to(device)
             batch_output=model(batch_x)
             
@@ -67,8 +71,8 @@ def main():
                             loss=loss+LAMBDA_NOOBJ*loss_c_noobj
                             continue 
                         # IOU
-                        iou_bbox1=compute_iou(row,col,pred_grid[:4],target_grid[:4])
-                        iou_bbox2=compute_iou(row,col,pred_grid[5:9],target_grid[:4])
+                        iou_bbox1=compute_iou(row,col,pred_grid[:4],target_grid[:4],IMG_SIZE,S)
+                        iou_bbox2=compute_iou(row,col,pred_grid[5:9],target_grid[:4],IMG_SIZE,S)
                         # 取IOU大的预测框的x,y,w,h,c
                         if iou_bbox1>iou_bbox2:
                             xywh=pred_grid[:4]

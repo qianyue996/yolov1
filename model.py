@@ -9,8 +9,8 @@ class Yolov1(nn.Module):
         self.C = C
 
         # 加载 ResNet-18 并去掉全连接层
-        resnet18 = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-        self.backbone = nn.Sequential(*list(resnet18.children())[:-2])  # 去掉最后两层
+        _resnet18 = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        self.backbone = nn.Sequential(*list(_resnet18.children())[:-2])  # 去掉最后两层
         for param in self.backbone.parameters():
             param.requires_grad=False
             
