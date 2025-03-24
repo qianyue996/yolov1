@@ -35,7 +35,7 @@ def main():
     except Exception as e:
         pass
 
-    model=Yolov1(S, C).to(device)
+    model=Yolov1(S, C).to(device).half()
     if checkpoint:
         model.load_state_dict(checkpoint['model'])
         
@@ -54,7 +54,7 @@ def main():
     for epoch in range(500):
         batch_avg_loss=0
         for batch_x,batch_y in tqdm(dataloader):
-            batch_x,batch_y=batch_x.to(device),batch_y.to(device)
+            batch_x,batch_y=batch_x.to(device).half(),batch_y.to(device).half()
             batch_output=model(batch_x)
             
             loss=torch.tensor(0)
