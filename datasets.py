@@ -6,7 +6,7 @@ from torchvision.transforms import ToTensor
 class YoloVOCDataset(Dataset):
     def __init__(self, IMG_SIZE, S, C, image_set='train'):
         super().__init__()
-        self.voc_ds=VOCDetection(root='./data',year='2012',image_set=image_set,download=True)
+        self.voc_ds=VOCDetection(root='./data',year='2012',image_set=image_set,download=False)
         
         classdict=set()
         for _,label in self.voc_ds:
@@ -49,7 +49,7 @@ class YoloVOCDataset(Dataset):
             y[grid_i,grid_j,0:5]=y[grid_i,grid_j,5:10]=torch.tensor([xcenter,ycenter,width,height,1])   # x,y,w,h,c
             y[grid_i,grid_j,10:]=torch.zeros(20)
             y[grid_i,grid_j,10+classid]=1
-        return x,y
+        return x,y # ((3,448,448),(7,7,30))
     
     def __len__(self):
         return len(self.voc_ds)

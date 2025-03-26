@@ -1,4 +1,7 @@
 /__pycache__
+/utils/__pycache__
 /.git
 /data
 /runs
+
+checkpoint.pth
