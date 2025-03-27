@@ -5,15 +5,11 @@ from torchvision.models import resnet50, ResNet50_Weights
 class Yolov1(nn.Module):
     def __init__(self, S, C):
         super().__init__()
-        # 参数初始化
         self.S = S
         self.C = C
 
-        # 加载 ResNet-18 并去掉全连接层
         _resnet18 = resnet50(weights=ResNet50_Weights.DEFAULT)
         self.backbone = nn.Sequential(*list(_resnet18.children())[:-2])  # 去掉最后两层
-        # for param in self.backbone.parameters():
-        #     param.requires_grad=False
             
         self.head=nn.Sequential(
             nn.Conv2d(in_channels=2048,out_channels=1024,kernel_size=3,padding=1), # (batch,1024,14,14)
@@ -35,4 +31,3 @@ class Yolov1(nn.Module):
         y=self.backbone(x) # y:(batch,512,14,14)
         y=self.head(y) # y:(batch,S*S*(10+C))
         return y.view(-1,self.S,self.S,10+self.C) # (7,7,2*5+C)
-        # y.view(-1,self.S,self.S,10+self.C)[0,:,:,:][:,:,4].max(),y.view(-1,self.S,self.S,10+self.C)[0,:,:,:][:,:,9].max()

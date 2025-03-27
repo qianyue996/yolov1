@@ -1,6 +1,6 @@
 import torch
 
-def compute_iou(grid_row,grid_col,xywh_a,xywh_b, IMG_SIZE, S):
+def compute_iou(grid_row,grid_col,xywh_a,xywh_b,IMG_SIZE,S):
     grid_size=IMG_SIZE//S
     
     # yolo coordinates
@@ -8,9 +8,11 @@ def compute_iou(grid_row,grid_col,xywh_a,xywh_b, IMG_SIZE, S):
     xcenter_b,ycenter_b,w_b,h_b=xywh_b
     
     # normal coordinates
-    xcenter_a,ycenter_a=(grid_col+xcenter_a)*grid_size,(grid_row+ycenter_a)*grid_size
+    # xcenter_a,ycenter_a=(grid_col+xcenter_a)*grid_size,(grid_row+ycenter_a)*grid_size
+    xcenter_a,ycenter_a=(grid_row+xcenter_a)*grid_size,(grid_col+ycenter_a)*grid_size # grid_col and grid_row交换位置
     w_a,h_a=w_a*IMG_SIZE,h_a*IMG_SIZE
-    xcenter_b,ycenter_b=(grid_col+xcenter_b)*grid_size,(grid_row+ycenter_b)*grid_size
+    # xcenter_b,ycenter_b=(grid_col+xcenter_b)*grid_size,(grid_row+ycenter_b)*grid_size
+    xcenter_b,ycenter_b=(grid_row+xcenter_b)*grid_size,(grid_col+ycenter_b)*grid_size
     w_b,h_b=w_b*IMG_SIZE,h_b*IMG_SIZE
     
     # border
@@ -29,7 +31,7 @@ def compute_iou(grid_row,grid_col,xywh_a,xywh_b, IMG_SIZE, S):
     union_area=w_a*h_a+w_b*h_b-inter_area # 并集
     return inter_area/union_area # IOU
 
-def compute_loss(batch_x,batch_y,batch_output,LAMBDA_NOOBJ,LAMBDA_COORD,S,IMG_SIZE):
+def compute_loss(batch_x,batch_y,batch_output,LAMBDA_NOOBJ,LAMBDA_COORD,IMG_SIZE,S):
     loss=torch.tensor(0)
     for i in range(len(batch_x)):
         x=batch_x[i]
@@ -38,8 +40,10 @@ def compute_loss(batch_x,batch_y,batch_output,LAMBDA_NOOBJ,LAMBDA_COORD,S,IMG_SI
         # foreach grid
         for row in range(S):    
             for col in range(S):
-                pred_grid=output[row,col] 
+                # 第row,col个格子(总共SxS 49个)的预测值与目标进行匹配
+                pred_grid=output[row,col]
                 target_grid=y[row,col]
+
                 if not target_grid[4]>0: # no object in this grid
                     loss_c_noobj=(pred_grid[4])**2+(pred_grid[9])**2 # no object in grid,so target c is 0
                     loss=loss+LAMBDA_NOOBJ*loss_c_noobj
@@ -47,6 +51,7 @@ def compute_loss(batch_x,batch_y,batch_output,LAMBDA_NOOBJ,LAMBDA_COORD,S,IMG_SI
                 # IOU
                 iou_bbox1=compute_iou(row,col,pred_grid[:4],target_grid[:4],IMG_SIZE,S)
                 iou_bbox2=compute_iou(row,col,pred_grid[5:9],target_grid[:4],IMG_SIZE,S)
+                print(f'IOU值: ',iou_bbox1,iou_bbox2)
                 # 取IOU大的预测框的x,y,w,h,c
                 if iou_bbox1>iou_bbox2:
                     xywh=pred_grid[:4]
@@ -61,5 +66,6 @@ def compute_loss(batch_x,batch_y,batch_output,LAMBDA_NOOBJ,LAMBDA_COORD,S,IMG_SI
                 loss_c_noobj=c_noobj**2
                 loss_class=((pred_grid[10:]-target_grid[10:])**2).sum()
                 loss=loss+loss_xywh*LAMBDA_COORD+loss_c_obj+loss_c_noobj*LAMBDA_NOOBJ+loss_class
+                # loss=loss+loss_xywh*LAMBDA_COORD+loss_c_obj*LAMBDA_COORD+loss_c_noobj*LAMBDA_NOOBJ+loss_class
                 
     return loss

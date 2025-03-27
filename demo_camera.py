@@ -4,6 +4,7 @@ import numpy as np
 from torchvision.transforms import ToTensor
 
 from model import Yolov1
+from utils.draw import draw_box
 
 device='cpu'
 IMG_SIZE=224
@@ -15,23 +16,6 @@ save_conf=[]
 model=Yolov1(S,C).to(device)
 model.load_state_dict(torch.load('checkpoint.pth',map_location=device)['model'])
 model.eval()
-
-def draw_box(img,row,col,output):
-    grid_size=IMG_SIZE/S
-
-    # 坐标还原（仅在3x448x448中）
-    cx,cy=grid_size*(col+output[0]),grid_size*(row+output[1])
-    w,h=output[2]*IMG_SIZE,output[3]*IMG_SIZE
-    xmin,ymin,xmax,ymax=cx-w/2,cy-h/2,cx+w/2,cy+h/2
-
-    # 缩放到原图坐标
-    x_scale=img.shape[1]/IMG_SIZE
-    y_scale=img.shape[0]/IMG_SIZE
-    cx,cy=cx*x_scale,cy*y_scale
-    xmin,ymin,xmax,ymax=xmin*x_scale,ymin*y_scale,xmax*x_scale,ymax*y_scale
-
-    # 画框rectangle
-    cv.rectangle(img,(int(xmin),int(ymin)),(int(xmax),int(ymax)),color=(0,0,255))
 
 def process_frame(frame,model):
     global save_conf
@@ -49,9 +33,9 @@ def process_frame(frame,model):
     for i in range(S):
         for j in range(S):
             if output[i,j,4]>0.5:
-                draw_box(frame,i,j,output[i,j,:5])
-            if output[i,j,9]>0.5:
-                draw_box(frame,i,j,output[i,j,5:10])
+                draw_box(frame,i,j,output[i,j,:5],IMG_SIZE,S)
+            elif output[i,j,9]>0.5:
+                draw_box(frame,i,j,output[i,j,5:10],IMG_SIZE,S)
 
 if __name__=='__main__':
     cap = cv.VideoCapture(0)
