@@ -16,3 +16,4 @@ def draw_box(img,row,col,output,IMG_SIZE,S):
 
     # 画框rectangle
     cv.rectangle(img,(int(xmin),int(ymin)),(int(xmax),int(ymax)),color=(0,0,255))
+    # cv.addText(img,)

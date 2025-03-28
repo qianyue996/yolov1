@@ -9,7 +9,7 @@ from utils.draw import draw_box
 device='cpu'
 IMG_SIZE=224
 S=7
-C=1
+C=20
 
 save_conf=[]
 
@@ -49,6 +49,7 @@ if __name__=='__main__':
         frame=cv.resize(frame,(IMG_SIZE,IMG_SIZE))
         process_frame(frame,model)
         frame=cv.resize(frame,(540,448))
+        cv.namedWindow('Camera', cv.WINDOW_NORMAL)
         cv.imshow('Camera', frame)
         if cv.waitKey(1) == ord('q'):
             break
